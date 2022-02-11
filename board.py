@@ -66,20 +66,20 @@ class Board:
             self.pieces[color + name] = scaled
 
     def _draw_squares(self, surface):
-        pass
-
-    def _draw_pieces(self, surface):
-        pass
-
-    def draw(self, surface):
         for square in self.squares:
             pygame.draw.rect(surface, square.color, square.rect)
+
+    def _draw_pieces(self, surface):
         for rank in self.board:
             for piece in rank:
                 if piece is not None:
                     surface.blit(
                         self.pieces[piece.color + piece.name], (piece.left, piece.top)
                     )
+
+    def draw(self, surface):
+        self._draw_squares(surface)
+        self._draw_pieces(surface)
 
     def init_board(self):
         for file in range(8):
