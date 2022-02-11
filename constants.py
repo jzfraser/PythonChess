@@ -1,0 +1,4 @@
+# constants
+BLACK = [70, 70, 70]
+WHITE = [150, 150, 150]
+SQUARE_LENGTH = 80
