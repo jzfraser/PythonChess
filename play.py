@@ -1,4 +1,5 @@
 import sys, pygame
+import chess
 import board
 from constants import SQUARE_LENGTH, WHITE
 
@@ -10,8 +11,9 @@ def main():
     size = (width, height)
     screen = pygame.display.set_mode(size)
 
-    gameBoard = board.Board()
-    gameBoard.init_board()
+    ui = board.Board()
+    gameBoard = chess.Board()
+    ui.set_board_from_fen(gameBoard.board_fen())
 
     while True:
         for event in pygame.event.get():
@@ -19,7 +21,7 @@ def main():
                 sys.exit()
 
         screen.fill(WHITE)
-        gameBoard.draw(screen)
+        ui.draw(screen)
 
         pygame.display.update()
 

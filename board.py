@@ -2,7 +2,7 @@ import pygame
 from constants import SQUARE_LENGTH, WHITE, BLACK
 
 
-piece_names = ["KING", "QUEEN", "BISHOP", "KNIGHT", "ROOK", "PAWN"]
+piece_names = ["K", "Q", "B", "N", "R", "P"]
 
 
 class Square:
@@ -16,9 +16,8 @@ class Square:
 
 
 class Piece:
-    def __init__(self, color, name, left, top):
-        self.name = name
-        self.color = color
+    def __init__(self, symbol, left, top):
+        self.symbol = symbol
         self.left = left
         self.top = top
 
@@ -60,10 +59,9 @@ class Board:
             scaled = pygame.transform.smoothscale(cropped, (80, 80))
 
             name = piece_names[i % 6]
-            color = "w"
             if i > 5:
-                color = "b"
-            self.pieces[color + name] = scaled
+                name = name.lower()
+            self.pieces[name] = scaled
 
     def _draw_squares(self, surface):
         for square in self.squares:
@@ -73,9 +71,23 @@ class Board:
         for rank in self.board:
             for piece in rank:
                 if piece is not None:
-                    surface.blit(
-                        self.pieces[piece.color + piece.name], (piece.left, piece.top)
-                    )
+                    surface.blit(self.pieces[piece.symbol], (piece.left, piece.top))
+
+    def set_board_from_fen(self, fen):
+        rank = 8
+        file = 1
+        for char in fen:
+            if char == "/":
+                rank = rank - 1
+                file = 1
+                continue
+            elif char.isdigit():
+                file = file + int(char)
+            elif char.isalpha():
+                left = (file - 1) * 80
+                top = (rank - 1) * 80
+                self.board[rank - 1][file - 1] = Piece(char, left, top)
+            file = file + 1
 
     def draw(self, surface):
         self._draw_squares(surface)
@@ -86,24 +98,24 @@ class Board:
             left = file * 80
             wTop = 80 * 6
             bTop = 80
-            self.board[1][file] = Piece("w", "PAWN", left, wTop)
-            self.board[6][file] = Piece("b", "PAWN", left, bTop)
+            self.board[1][file] = Piece("P", left, wTop)
+            self.board[6][file] = Piece("p", left, bTop)
 
         wTop = 80 * 7
         bTop = 0
-        self.board[0][0] = Piece("w", "ROOK", 0, wTop)
-        self.board[0][1] = Piece("w", "KNIGHT", 80, wTop)
-        self.board[0][2] = Piece("w", "BISHOP", 160, wTop)
-        self.board[0][3] = Piece("w", "QUEEN", 240, wTop)
-        self.board[0][4] = Piece("w", "KING", 320, wTop)
-        self.board[0][5] = Piece("w", "BISHOP", 400, wTop)
-        self.board[0][6] = Piece("w", "KNIGHT", 480, wTop)
-        self.board[0][7] = Piece("w", "ROOK", 560, wTop)
-        self.board[7][0] = Piece("b", "ROOK", 0, bTop)
-        self.board[7][1] = Piece("b", "KNIGHT", 80, bTop)
-        self.board[7][2] = Piece("b", "BISHOP", 160, bTop)
-        self.board[7][3] = Piece("b", "QUEEN", 240, bTop)
-        self.board[7][4] = Piece("b", "KING", 320, bTop)
-        self.board[7][5] = Piece("b", "BISHOP", 400, bTop)
-        self.board[7][6] = Piece("b", "KNIGHT", 480, bTop)
-        self.board[7][7] = Piece("b", "ROOK", 560, bTop)
+        self.board[0][0] = Piece("R", 0, wTop)
+        self.board[0][1] = Piece("N", 80, wTop)
+        self.board[0][2] = Piece("B", 160, wTop)
+        self.board[0][3] = Piece("Q", 240, wTop)
+        self.board[0][4] = Piece("K", 320, wTop)
+        self.board[0][5] = Piece("B", 400, wTop)
+        self.board[0][6] = Piece("N", 480, wTop)
+        self.board[0][7] = Piece("R", 560, wTop)
+        self.board[7][0] = Piece("r", 0, bTop)
+        self.board[7][1] = Piece("n", 80, bTop)
+        self.board[7][2] = Piece("b", 160, bTop)
+        self.board[7][3] = Piece("q", 240, bTop)
+        self.board[7][4] = Piece("k", 320, bTop)
+        self.board[7][5] = Piece("b", 400, bTop)
+        self.board[7][6] = Piece("n", 480, bTop)
+        self.board[7][7] = Piece("r", 560, bTop)
