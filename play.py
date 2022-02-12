@@ -1,5 +1,5 @@
 import sys, pygame, chess
-import board
+import ui
 from constants import SQUARE_LENGTH, WHITE
 
 
@@ -10,9 +10,9 @@ def main():
     size = (width, height)
     screen = pygame.display.set_mode(size)
 
-    ui = board.Board()
+    uiBoard = ui.Board()
     gameBoard = chess.Board()
-    ui.set_board_from_fen(gameBoard.board_fen())
+    uiBoard.set_board_from_fen(gameBoard.board_fen())
 
     first_move = True
 
@@ -23,11 +23,11 @@ def main():
 
         if first_move:
             gameBoard.push_san("e4")
-            ui.set_board_from_fen(gameBoard.board_fen())
+            uiBoard.set_board_from_fen(gameBoard.board_fen())
             first_move = False
 
         screen.fill(WHITE)
-        ui.draw(screen)
+        uiBoard.draw(screen)
 
         pygame.display.update()
 
