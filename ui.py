@@ -3,26 +3,8 @@ from constants import *
 
 
 piece_names = ["K", "Q", "B", "N", "R", "P"]
-san_file_num_map = {
-    'a': 0,
-    'b': 1,
-    'c': 2,
-    'd': 3,
-    'e': 4,
-    'f': 5,
-    'g': 6,
-    'h': 7
-}
-san_rank_map = {
-    '1': 7,
-    '2': 6,
-    '3': 5,
-    '4': 4,
-    '5': 3,
-    '6': 2,
-    '7': 1,
-    '8': 0,
-}
+san_file_num_map = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
+san_rank_map = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
 
 
 class Square:
@@ -41,6 +23,9 @@ class Piece:
         self.left = left
         self.top = top
 
+    def __str__(self):
+        return self.symbol
+
 
 class Board:
     def __init__(self):
@@ -50,6 +35,27 @@ class Board:
         self.pieces_png = pygame.image.load("./images/Pieces.png").convert_alpha()
         self._create_squares()
         self._load_piece_images()
+
+    def __str__(self):
+        boardString = ""
+        numEmpty = 0
+        for rank in self.board:
+            for piece in rank:
+                if piece is None:
+                    numEmpty = numEmpty + 1
+                    continue
+                boardString = boardString + str(piece)
+            if numEmpty > 0:
+                boardString = boardString + str(numEmpty)
+            boardString = boardString + "/"
+            numEmpty = 0
+        return boardString
+
+    def _rank_to_top(self, rank: int):
+        return rank * 80
+
+    def _file_to_left(self, file: int):
+        return file * 80
 
     def _empty_board(self):
         self.board = [[None for j in range(8)] for i in range(8)]
@@ -103,6 +109,7 @@ class Board:
         self._draw_pieces(surface)
 
     def set_board_fen(self, fen: str):
+        self._empty_board()
         rank = 0
         file = 0
         for char in fen:
@@ -114,8 +121,8 @@ class Board:
                 file = file + int(char)
                 continue
             elif char.isalpha():
-                left = file * 80
-                top = rank * 80
+                left = self._file_to_left(file)
+                top = self._rank_to_top(rank)
                 self.board[rank][file] = Piece(char, left, top)
             file = file + 1
 
@@ -124,15 +131,14 @@ class Board:
             raise Exception("missing src or dest location")
 
         srcFile = san_file_num_map[src[0]]
-        srcRank = int(src[1])
+        srcRank = san_rank_map[src[1]]
         destFile = san_file_num_map[dest[0]]
-        destRank = int(dest[1])
+        destRank = san_rank_map[dest[1]]
 
-        print(f"moving piece from {srcFile},{srcRank} to {destFile},{destRank}")
+        srcPiece = self.board[srcRank][srcFile]
 
-        # print(f"src: {self.board[srcRank][srcFile]}")
-        # print(f"dest: {self.board[destRank][destFile]}")
-        # print(self.board)
+        srcPiece.top = self._rank_to_top(destRank)
+        srcPiece.left = self._file_to_left(destFile)
 
         self.board[destRank][destFile] = self.board[srcRank][srcFile]
         self.board[srcRank][srcFile] = None

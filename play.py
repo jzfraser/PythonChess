@@ -14,9 +14,6 @@ def main():
     gameBoard = chess.Board()
     uiBoard.set_board_fen(gameBoard.board_fen())
 
-    gameBoard.push_san("e4")
-    uiBoard.move_piece_from_to("e2", "e4")
-
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -28,7 +25,7 @@ def main():
         pygame.display.update()
         if gameBoard.outcome() is not None:
             break
- 
+
     print(gameBoard.outcome())
 
 
