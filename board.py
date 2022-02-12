@@ -31,6 +31,9 @@ class Board:
         self._create_squares()
         self._load_piece_images()
 
+    def _empty_board(self):
+        self.board = [[None for j in range(8)] for i in range(8)]
+
     def _create_squares(self):
         for rank in range(8):
             for file in range(8):
@@ -74,6 +77,7 @@ class Board:
                     surface.blit(self.pieces[piece.symbol], (piece.left, piece.top))
 
     def set_board_from_fen(self, fen):
+        self._empty_board()
         rank = 8
         file = 1
         for char in fen:
@@ -83,6 +87,7 @@ class Board:
                 continue
             elif char.isdigit():
                 file = file + int(char)
+                continue
             elif char.isalpha():
                 left = (file - 1) * 80
                 top = (rank - 1) * 80
