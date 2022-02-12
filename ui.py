@@ -1,8 +1,28 @@
 import pygame
-from constants import SQUARE_LENGTH, WHITE, BLACK
+from constants import *
 
 
 piece_names = ["K", "Q", "B", "N", "R", "P"]
+san_file_num_map = {
+    'a': 0,
+    'b': 1,
+    'c': 2,
+    'd': 3,
+    'e': 4,
+    'f': 5,
+    'g': 6,
+    'h': 7
+}
+san_rank_map = {
+    '1': 7,
+    '2': 6,
+    '3': 5,
+    '4': 4,
+    '5': 3,
+    '6': 2,
+    '7': 1,
+    '8': 0,
+}
 
 
 class Square:
@@ -62,11 +82,13 @@ class Board:
             scaled = pygame.transform.smoothscale(cropped, (80, 80))
 
             name = piece_names[i % 6]
-            if i > 5:
+            if i <= 5:
+                name = name.upper()
+            elif i > 5:
                 name = name.lower()
             self.pieces[name] = scaled
 
-    def _draw_squares(self, surface):
+    def _draw_squares(self, surface: pygame.Surface):
         for square in self.squares:
             pygame.draw.rect(surface, square.color, square.rect)
 
@@ -76,51 +98,41 @@ class Board:
                 if piece is not None:
                     surface.blit(self.pieces[piece.symbol], (piece.left, piece.top))
 
-    def set_board_from_fen(self, fen):
-        self._empty_board()
-        rank = 8
-        file = 1
+    def draw(self, surface: pygame.Surface):
+        self._draw_squares(surface)
+        self._draw_pieces(surface)
+
+    def set_board_fen(self, fen: str):
+        rank = 0
+        file = 0
         for char in fen:
             if char == "/":
-                rank = rank - 1
-                file = 1
+                rank = rank + 1
+                file = 0
                 continue
             elif char.isdigit():
                 file = file + int(char)
                 continue
             elif char.isalpha():
-                left = (file - 1) * 80
-                top = (rank - 1) * 80
-                self.board[rank - 1][file - 1] = Piece(char, left, top)
+                left = file * 80
+                top = rank * 80
+                self.board[rank][file] = Piece(char, left, top)
             file = file + 1
 
-    def draw(self, surface):
-        self._draw_squares(surface)
-        self._draw_pieces(surface)
+    def move_piece_from_to(self, src: str, dest: str):
+        if len(src) == 0 or len(dest) == 0:
+            raise Exception("missing src or dest location")
 
-    def init_board(self):
-        for file in range(8):
-            left = file * 80
-            wTop = 80 * 6
-            bTop = 80
-            self.board[1][file] = Piece("P", left, wTop)
-            self.board[6][file] = Piece("p", left, bTop)
+        srcFile = san_file_num_map[src[0]]
+        srcRank = int(src[1])
+        destFile = san_file_num_map[dest[0]]
+        destRank = int(dest[1])
 
-        wTop = 80 * 7
-        bTop = 0
-        self.board[0][0] = Piece("R", 0, wTop)
-        self.board[0][1] = Piece("N", 80, wTop)
-        self.board[0][2] = Piece("B", 160, wTop)
-        self.board[0][3] = Piece("Q", 240, wTop)
-        self.board[0][4] = Piece("K", 320, wTop)
-        self.board[0][5] = Piece("B", 400, wTop)
-        self.board[0][6] = Piece("N", 480, wTop)
-        self.board[0][7] = Piece("R", 560, wTop)
-        self.board[7][0] = Piece("r", 0, bTop)
-        self.board[7][1] = Piece("n", 80, bTop)
-        self.board[7][2] = Piece("b", 160, bTop)
-        self.board[7][3] = Piece("q", 240, bTop)
-        self.board[7][4] = Piece("k", 320, bTop)
-        self.board[7][5] = Piece("b", 400, bTop)
-        self.board[7][6] = Piece("n", 480, bTop)
-        self.board[7][7] = Piece("r", 560, bTop)
+        print(f"moving piece from {srcFile},{srcRank} to {destFile},{destRank}")
+
+        # print(f"src: {self.board[srcRank][srcFile]}")
+        # print(f"dest: {self.board[destRank][destFile]}")
+        # print(self.board)
+
+        self.board[destRank][destFile] = self.board[srcRank][srcFile]
+        self.board[srcRank][srcFile] = None

@@ -12,24 +12,24 @@ def main():
 
     uiBoard = ui.Board()
     gameBoard = chess.Board()
-    uiBoard.set_board_from_fen(gameBoard.board_fen())
+    uiBoard.set_board_fen(gameBoard.board_fen())
 
-    first_move = True
+    gameBoard.push_san("e4")
+    uiBoard.move_piece_from_to("e2", "e4")
 
-    while gameBoard.outcome() is None:
+    while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-
-        if first_move:
-            gameBoard.push_san("e4")
-            uiBoard.set_board_from_fen(gameBoard.board_fen())
-            first_move = False
 
         screen.fill(WHITE)
         uiBoard.draw(screen)
 
         pygame.display.update()
+        if gameBoard.outcome() is not None:
+            break
+ 
+    print(gameBoard.outcome())
 
 
 if __name__ == "__main__":
