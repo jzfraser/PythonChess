@@ -23,13 +23,24 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for square in uiBoard.squares:
                     if square.rect.collidepoint(event.pos):
+                        if uiBoard.active_square is not None:
+                            if square is uiBoard.active_square:
+                                continue
+                            move = chess.Move.from_uci(
+                                uiBoard.active_square.name + square.name
+                            )
+                            if move in gameBoard.legal_moves:
+                                uiBoard.move_piece_from_to(
+                                    uiBoard.active_square.name, square.name
+                                )
+                                gameBoard.push(move)
                         if square.piece is not None:
-                            if uiBoard.active_piece == square:
-                                uiBoard.active_piece = None
+                            if uiBoard.active_square == square:
+                                uiBoard.active_square = None
                             else:
-                                uiBoard.active_piece = square
+                                uiBoard.active_square = square
                         else:
-                            uiBoard.active_piece = None
+                            uiBoard.active_square = None
 
         screen.fill(WHITE)
         uiBoard.draw(screen, list(gameBoard.legal_moves))

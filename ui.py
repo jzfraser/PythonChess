@@ -1,3 +1,4 @@
+from operator import indexOf
 import pygame
 from constants import *
 
@@ -11,6 +12,12 @@ class Square:
         self.color = color
         self.piece = None
         self.index = index
+        self.name = self._get_name()
+
+    def _get_name(self):
+        names = list(SQUARE_NAME_NUM_MAP.keys())
+        vals = list(SQUARE_NAME_NUM_MAP.values())
+        return names[vals.index(self.index)]
 
     def __str__(self):
         square = ""
@@ -24,15 +31,11 @@ class Square:
                 + " "
                 + str(self.index)
                 + " "
-                + str(self.piece.active)
-                + " "
-                + str(self.rect.left)
-                + " "
-                + str(self.rect.top)
+                + str(self.name)
             )
         else:
             square += (
-                "empty"
+                "#"
                 + " "
                 + str(self.left)
                 + " "
@@ -40,9 +43,7 @@ class Square:
                 + " "
                 + str(self.index)
                 + " "
-                + str(self.rect.left)
-                + " "
-                + str(self.rect.top)
+                + str(self.name)
             )
         return square
 
@@ -56,14 +57,14 @@ class Piece:
 
 
 class Board:
-    def __init__(self):
+    def __init__(self) -> None:
         self.squares = []
         self.pieces = {}
         self._create_squares()
         self._load_piece_images()
-        self.active_piece = None
+        self.active_square = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         boardString = ""
         numEmpty = 0
         for rank in self.board:
@@ -78,23 +79,23 @@ class Board:
             numEmpty = 0
         return boardString
 
-    def _square_to_coords(self, square: int):
+    def _square_to_coords(self, square: int) -> tuple:
         left = (square & 7) * 80
         top = (square >> 3) * 80
         return (left, top)
 
-    def _parse_square_name(self, square: str):
-        return SQUARE_NAME_NUM_MAP(square)
+    def _parse_square_name(self, square_index: str) -> int:
+        return SQUARE_NAME_NUM_MAP[square_index]
 
     def _get_square_center(self, square: Square) -> tuple:
         return (square.left + 40, square.top + 40)
 
-    def _empty_board(self):
+    def _empty_board(self) -> None:
         for square in self.squares:
             if square is not None:
                 square.piece = None
 
-    def _create_squares(self):
+    def _create_squares(self) -> None:
         index = 0
         for rank in range(7, -1, -1):
             for file in range(8):
@@ -114,17 +115,17 @@ class Board:
                 self.squares.append(s)
                 index += 1
 
-    # load chess piece image from png containing all of them
-    # images will be cropped to  333x334px on a subsurface
-    def _load_piece_images(self):
+    # load chess piece image from png containing all of them in one place
+    # images will be cropped to  333x334px on a subsurface then scaled down
+    # to 80x80px to fit on a square
+    def _load_piece_images(self) -> None:
         pieces_png = pygame.image.load("./images/Pieces.png").convert_alpha()
         for i in range(12):
-            left = (i % 6) * 333 # left side of image
-            top = 0
+            left = (i % 6) * 333  # left coord of crop area
+            top = 0  # top coord of corp area
             if i > 5:
                 top = 334
 
-            # 
             cropped = pieces_png.subsurface((left, top, 334, 334))
             scaled = pygame.transform.smoothscale(cropped, (80, 80))
 
@@ -135,11 +136,11 @@ class Board:
                 name = name.lower()
             self.pieces[name] = scaled
 
-    def _draw_squares(self, surface: pygame.Surface):
+    def _draw_squares(self, surface: pygame.Surface) -> None:
         for square in self.squares:
             pygame.draw.rect(surface, square.color, square.rect)
 
-    def _draw_pieces(self, surface):
+    def _draw_pieces(self, surface) -> None:
         for square in self.squares:
             if square.piece is not None:
                 surface.blit(
@@ -147,30 +148,26 @@ class Board:
                     (square.left, square.top),
                 )
 
-    def _draw_moves(self, surface: pygame.Surface, legalMoves):
-        active = self.active_piece
+    # draw a circle on any square that is a legal move for the
+    # piece on the current active square of the board
+    def _draw_moves(self, surface: pygame.Surface, legalMoves) -> None:
+        active = self.active_square
         if active is not None:
             for move in legalMoves:
                 from_square = move.from_square
                 to_square = move.to_square
-                # print(move)
-                # print(from_square, to_square)
-                # print(active.index)
                 if from_square == active.index:
-                    # print(from_square, to_square)
                     destSquare = self.squares[to_square]
                     destSquareCenter = self._get_square_center(destSquare)
-                    # print(active.left, active.top)
-                    # print(destSquare.left, destSquare.top)
-                    # print(destSquareCenter)
                     pygame.draw.circle(surface, PURPLE, destSquareCenter, 10)
 
-    def draw(self, surface: pygame.Surface, legalMoves):
+    def draw(self, surface: pygame.Surface, legalMoves) -> None:
         self._draw_squares(surface)
         self._draw_pieces(surface)
         self._draw_moves(surface, legalMoves)
 
-    def set_board_fen(self, fen: str):
+    # set pieces on the board based on a FEN string
+    def set_board_fen(self, fen: str) -> None:
         self._empty_board()
         fen_ranks = fen.split("/")
         fen_ranks.reverse()
@@ -184,17 +181,14 @@ class Board:
                 else:
                     square_index += int(symbol)
 
-    def move_piece_from_to(self, src: str, dest: str):
+    def move_piece_from_to(self, src: str, dest: str) -> None:
         if len(src) == 0 or len(dest) == 0:
             raise Exception("missing src or dest location")
 
-        srcSquare = self._parse_square_name(src)
-        destSquare = self._parse_square_name(dest)
-        srcPiece = self.squares[srcSquare].piece
-        top, left = self._square_to_coords(srcSquare)
+        src_square_index = self._parse_square_name(src)
+        dest_square_index = self._parse_square_name(dest)
 
-        srcPiece.top = top
-        srcPiece.left = left
-
-        self.squares[destSquare].piece = srcPiece
-        self.squares[srcSquare].piece = None
+        src_piece = self.squares[src_square_index].piece
+        if src_piece is not None:
+            self.squares[dest_square_index].piece = src_piece
+            self.squares[src_square_index].piece = None
