@@ -12,9 +12,13 @@ def main():
 
     uiBoard = ui.Board()
     gameBoard = chess.Board()
-    uiBoard.set_board_fen(gameBoard.board_fen())
+
+    starting_fen = gameBoard.board_fen()
+    uiBoard.set_board_fen(starting_fen)
 
     clock = pygame.time.Clock()
+
+    outcome = None
 
     while True:
         for event in pygame.event.get():
@@ -46,11 +50,30 @@ def main():
         uiBoard.draw(screen, list(gameBoard.legal_moves))
 
         pygame.display.update()
-        if gameBoard.outcome() is not None:
-            break
+
         clock.tick(FPS)
 
-    print(gameBoard.outcome())
+        if gameBoard.outcome() is not None:
+            outcome = gameBoard.outcome()
+            if outcome.winner is not None:
+                winner = COLOR_MAP[outcome.winner]
+                print(f"{winner} won by {str(outcome.termination.name)}!")
+            else:
+                print(f"The match was a draw!")
+            print()
+            print(outcome.result())
+            again = input("Play again? (y/n)")
+            if again == "y":
+                uiBoard._empty_board()
+                uiBoard.set_board_fen(starting_fen)
+                gameBoard.reset()
+                print("Board reset. Enjoy!")
+                continue
+            elif again == "n":
+                sys.exit()
+            else:
+                print("Invalid input, exiting")
+                sys.exit()
 
 
 if __name__ == "__main__":
