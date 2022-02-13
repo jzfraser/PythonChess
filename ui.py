@@ -59,7 +59,6 @@ class Board:
     def __init__(self):
         self.squares = []
         self.pieces = {}
-        self.pieces_png = pygame.image.load("./images/Pieces.png").convert_alpha()
         self._create_squares()
         self._load_piece_images()
         self.active_piece = None
@@ -115,15 +114,18 @@ class Board:
                 self.squares.append(s)
                 index += 1
 
-    # values used in this method seem random but are based on properties of the png containing the piece images
+    # load chess piece image from png containing all of them
+    # images will be cropped to  333x334px on a subsurface
     def _load_piece_images(self):
+        pieces_png = pygame.image.load("./images/Pieces.png").convert_alpha()
         for i in range(12):
-            left = (i % 6) * 333
+            left = (i % 6) * 333 # left side of image
             top = 0
             if i > 5:
                 top = 334
 
-            cropped = self.pieces_png.subsurface((left, top, 334, 334))
+            # 
+            cropped = pieces_png.subsurface((left, top, 334, 334))
             scaled = pygame.transform.smoothscale(cropped, (80, 80))
 
             name = PIECE_NAMES[i % 6]
@@ -161,7 +163,7 @@ class Board:
                     # print(active.left, active.top)
                     # print(destSquare.left, destSquare.top)
                     # print(destSquareCenter)
-                    pygame.draw.circle(surface, [30, 144, 255], destSquareCenter, 10)
+                    pygame.draw.circle(surface, PURPLE, destSquareCenter, 10)
 
     def draw(self, surface: pygame.Surface, legalMoves):
         self._draw_squares(surface)
