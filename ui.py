@@ -2,26 +2,54 @@ import pygame
 from constants import *
 
 
-piece_names = ["K", "Q", "B", "N", "R", "P"]
-san_file_num_map = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
-san_rank_map = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}
-
-
 class Square:
-    def __init__(self, left, top, length, color):
+    def __init__(self, left, top, length, color, index):
         self.left = left
         self.top = top
         self.length = length
         self.rect = pygame.Rect(left, top, self.length, self.length)
-
         self.color = color
+        self.piece = None
+        self.index = index
+
+    def __str__(self):
+        square = ""
+        if self.piece is not None:
+            square += (
+                self.piece.symbol
+                + " "
+                + str(self.left)
+                + " "
+                + str(self.top)
+                + " "
+                + str(self.index)
+                + " "
+                + str(self.piece.active)
+                + " "
+                + str(self.rect.left)
+                + " "
+                + str(self.rect.top)
+            )
+        else:
+            square += (
+                "empty"
+                + " "
+                + str(self.left)
+                + " "
+                + str(self.top)
+                + " "
+                + str(self.index)
+                + " "
+                + str(self.rect.left)
+                + " "
+                + str(self.rect.top)
+            )
+        return square
 
 
 class Piece:
     def __init__(self, symbol, left, top):
         self.symbol = symbol
-        self.left = left
-        self.top = top
 
     def __str__(self):
         return self.symbol
@@ -31,10 +59,10 @@ class Board:
     def __init__(self):
         self.squares = []
         self.pieces = {}
-        self.board = [[None for j in range(8)] for i in range(8)]
         self.pieces_png = pygame.image.load("./images/Pieces.png").convert_alpha()
         self._create_squares()
         self._load_piece_images()
+        self.active_piece = None
 
     def __str__(self):
         boardString = ""
@@ -51,30 +79,41 @@ class Board:
             numEmpty = 0
         return boardString
 
-    def _rank_to_top(self, rank: int):
-        return rank * 80
+    def _square_to_coords(self, square: int):
+        left = (square & 7) * 80
+        top = (square >> 3) * 80
+        return (left, top)
 
-    def _file_to_left(self, file: int):
-        return file * 80
+    def _parse_square_name(self, square: str):
+        return SQUARE_NAME_NUM_MAP(square)
+
+    def _get_square_center(self, square: Square) -> tuple:
+        return (square.left + 40, square.top + 40)
 
     def _empty_board(self):
-        self.board = [[None for j in range(8)] for i in range(8)]
+        for square in self.squares:
+            if square is not None:
+                square.piece = None
 
     def _create_squares(self):
-        for rank in range(8):
+        index = 0
+        for rank in range(7, -1, -1):
             for file in range(8):
                 left = file * SQUARE_LENGTH
                 top = rank * SQUARE_LENGTH
-
                 color = BLACK
+
                 if (
-                    ((file % 2 != 0) and (rank % 2 != 0))
+                    (file % 2 != 0)
+                    and (rank % 2 != 0)
                     or (file % 2 == 0)
                     and (rank % 2 == 0)
                 ):
                     color = WHITE
-                s = Square(left, top, SQUARE_LENGTH, color)
+
+                s = Square(left, top, SQUARE_LENGTH, color, index)
                 self.squares.append(s)
+                index += 1
 
     # values used in this method seem random but are based on properties of the png containing the piece images
     def _load_piece_images(self):
@@ -87,7 +126,7 @@ class Board:
             cropped = self.pieces_png.subsurface((left, top, 334, 334))
             scaled = pygame.transform.smoothscale(cropped, (80, 80))
 
-            name = piece_names[i % 6]
+            name = PIECE_NAMES[i % 6]
             if i <= 5:
                 name = name.upper()
             elif i > 5:
@@ -99,46 +138,61 @@ class Board:
             pygame.draw.rect(surface, square.color, square.rect)
 
     def _draw_pieces(self, surface):
-        for rank in self.board:
-            for piece in rank:
-                if piece is not None:
-                    surface.blit(self.pieces[piece.symbol], (piece.left, piece.top))
+        for square in self.squares:
+            if square.piece is not None:
+                surface.blit(
+                    self.pieces[square.piece.symbol],
+                    (square.left, square.top),
+                )
 
-    def draw(self, surface: pygame.Surface):
+    def _draw_moves(self, surface: pygame.Surface, legalMoves):
+        active = self.active_piece
+        if active is not None:
+            for move in legalMoves:
+                from_square = move.from_square
+                to_square = move.to_square
+                # print(move)
+                # print(from_square, to_square)
+                # print(active.index)
+                if from_square == active.index:
+                    # print(from_square, to_square)
+                    destSquare = self.squares[to_square]
+                    destSquareCenter = self._get_square_center(destSquare)
+                    # print(active.left, active.top)
+                    # print(destSquare.left, destSquare.top)
+                    # print(destSquareCenter)
+                    pygame.draw.circle(surface, [30, 144, 255], destSquareCenter, 10)
+
+    def draw(self, surface: pygame.Surface, legalMoves):
         self._draw_squares(surface)
         self._draw_pieces(surface)
+        self._draw_moves(surface, legalMoves)
 
     def set_board_fen(self, fen: str):
         self._empty_board()
-        rank = 0
-        file = 0
-        for char in fen:
-            if char == "/":
-                rank = rank + 1
-                file = 0
-                continue
-            elif char.isdigit():
-                file = file + int(char)
-                continue
-            elif char.isalpha():
-                left = self._file_to_left(file)
-                top = self._rank_to_top(rank)
-                self.board[rank][file] = Piece(char, left, top)
-            file = file + 1
+        fen_ranks = fen.split("/")
+        fen_ranks.reverse()
+        square_index = 0
+        for rank in fen_ranks:
+            for symbol in rank:
+                if symbol.isalpha():
+                    left, top = self._square_to_coords(square_index)
+                    self.squares[square_index].piece = Piece(symbol, left, top)
+                    square_index += 1
+                else:
+                    square_index += int(symbol)
 
     def move_piece_from_to(self, src: str, dest: str):
         if len(src) == 0 or len(dest) == 0:
             raise Exception("missing src or dest location")
 
-        srcFile = san_file_num_map[src[0]]
-        srcRank = san_rank_map[src[1]]
-        destFile = san_file_num_map[dest[0]]
-        destRank = san_rank_map[dest[1]]
+        srcSquare = self._parse_square_name(src)
+        destSquare = self._parse_square_name(dest)
+        srcPiece = self.squares[srcSquare].piece
+        top, left = self._square_to_coords(srcSquare)
 
-        srcPiece = self.board[srcRank][srcFile]
+        srcPiece.top = top
+        srcPiece.left = left
 
-        srcPiece.top = self._rank_to_top(destRank)
-        srcPiece.left = self._file_to_left(destFile)
-
-        self.board[destRank][destFile] = self.board[srcRank][srcFile]
-        self.board[srcRank][srcFile] = None
+        self.squares[destSquare].piece = srcPiece
+        self.squares[srcSquare].piece = None
