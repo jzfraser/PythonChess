@@ -1,4 +1,3 @@
-from operator import indexOf
 import pygame
 from constants import *
 
@@ -10,7 +9,7 @@ class Square:
         self.length = length
         self.rect = pygame.Rect(left, top, self.length, self.length)
         self.color = color
-        self.piece = None
+        self.piece: Piece = None
         self.index = index
         self.name = self._get_name()
 
@@ -47,10 +46,28 @@ class Square:
             )
         return square
 
+    def reset_piece_pos(self):
+        if self.piece is not None:
+            self.piece.left = self.left
+            self.piece.top = self.top
+            self.piece.offset_left = 0
+            self.piece.offset_top = 0
+            self.piece.dragging = False
+
+    def set_piece_offsets(self, left, top):
+        if self.piece is not None:
+            self.piece.offset_left = self.left - left
+            self.piece.offset_top = self.top - top
+
 
 class Piece:
     def __init__(self, symbol, left, top):
         self.symbol = symbol
+        self.dragging = False
+        self.left = left
+        self.top = top
+        self.offset_left = 0
+        self.offset_top = 0
 
     def __str__(self):
         return self.symbol
@@ -62,7 +79,7 @@ class Board:
         self.pieces = {}
         self._create_squares()
         self._load_piece_images()
-        self.active_square = None
+        self.active_square: Square = None
 
     def __str__(self) -> str:
         boardString = ""
@@ -143,10 +160,16 @@ class Board:
     def _draw_pieces(self, surface) -> None:
         for square in self.squares:
             if square.piece is not None:
-                surface.blit(
-                    self.pieces[square.piece.symbol],
-                    (square.left, square.top),
-                )
+                if not square.piece.dragging:
+                    surface.blit(
+                        self.pieces[square.piece.symbol],
+                        (square.left, square.top),
+                    )
+                else:
+                    surface.blit(
+                        self.pieces[square.piece.symbol],
+                        (square.piece.left, square.piece.top),
+                    )
 
     # draw a circle on any square that is a legal move for the
     # piece on the current active square of the board
@@ -175,7 +198,8 @@ class Board:
         for rank in fen_ranks:
             for symbol in rank:
                 if symbol.isalpha():
-                    left, top = self._square_to_coords(square_index)
+                    left = self.squares[square_index].left
+                    top = self.squares[square_index].top
                     self.squares[square_index].piece = Piece(symbol, left, top)
                     square_index += 1
                 else:

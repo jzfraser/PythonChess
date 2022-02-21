@@ -24,11 +24,21 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for square in uiBoard.squares:
                     if square.rect.collidepoint(event.pos):
                         if uiBoard.active_square is not None:
                             if square is uiBoard.active_square:
+                                color = (
+                                    square.piece.symbol.isupper()
+                                )  # true if white, false if black
+                                if color != gameBoard.turn:
+                                    break
+                                uiBoard.active_square.piece.dragging = True
+                                mouse_left, mouse_top = event.pos
+                                uiBoard.active_square.set_piece_offsets(
+                                    mouse_left, mouse_top
+                                )
                                 continue
                             move = chess.Move.from_uci(
                                 uiBoard.active_square.name + square.name
@@ -38,13 +48,52 @@ def main():
                                     uiBoard.active_square.name, square.name
                                 )
                                 gameBoard.push(move)
+                                square.reset_piece_pos()
+                                uiBoard.active_square = None
                         if square.piece is not None:
                             if uiBoard.active_square == square:
                                 uiBoard.active_square = None
                             else:
+                                color = (
+                                    square.piece.symbol.isupper()
+                                )  # true if white, false if black
+                                if color != gameBoard.turn:
+                                    break
                                 uiBoard.active_square = square
+                                uiBoard.active_square.piece.dragging = True
+                                mouse_left, mouse_top = event.pos
+                                uiBoard.active_square.set_piece_offsets(
+                                    mouse_left, mouse_top
+                                )
                         else:
                             uiBoard.active_square = None
+            elif event.type == pygame.MOUSEMOTION and uiBoard.active_square is not None:
+                if uiBoard.active_square.piece.dragging:
+                    piece = uiBoard.active_square.piece
+                    mouse_left, mouse_top = event.pos
+                    piece.left = piece.offset_left + mouse_left
+                    piece.top = piece.offset_top + mouse_top
+            elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                if uiBoard.active_square is not None:
+                    for square in uiBoard.squares:
+                        if square.rect.collidepoint(event.pos):
+                            if uiBoard.active_square.name == square.name:
+                                uiBoard.active_square.reset_piece_pos()
+                                break
+                            move = chess.Move.from_uci(
+                                uiBoard.active_square.name + square.name
+                            )
+                            if move in gameBoard.legal_moves:
+                                uiBoard.active_square.reset_piece_pos()
+                                uiBoard.move_piece_from_to(
+                                    uiBoard.active_square.name, square.name
+                                )
+                                gameBoard.push(move)
+                                square.reset_piece_pos()
+                                uiBoard.active_square = None
+                                break
+                            else:
+                                uiBoard.active_square.reset_piece_pos()
 
         screen.fill(WHITE)
         uiBoard.draw(screen, list(gameBoard.legal_moves))
