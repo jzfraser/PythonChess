@@ -1,5 +1,5 @@
 # constants
-FPS = 30
+FPS = 60
 
 BLACK = [70, 70, 70]
 WHITE = [150, 150, 150]
@@ -12,6 +12,8 @@ COLOR_MAP = {0: "White", 1: "Black"}
 SQUARE_LENGTH = 80
 
 PIECE_NAMES = ["K", "Q", "B", "N", "R", "P"]
+
+STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
 
 SAN_FILE_NUM_MAP = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
 SAN_RANK_MAP = {"1": 7, "2": 6, "3": 5, "4": 4, "5": 3, "6": 2, "7": 1, "8": 0}

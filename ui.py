@@ -205,7 +205,7 @@ class Board:
                 else:
                     square_index += int(symbol)
 
-    def move_piece_from_to(self, src: str, dest: str) -> None:
+    def move_from_to(self, src: str, dest: str) -> None:
         if len(src) == 0 or len(dest) == 0:
             raise Exception("missing src or dest location")
 
