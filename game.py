@@ -80,7 +80,7 @@ class Game:
                         break
 
     def make_move(self, dest_square) -> bool:
-        # still need to handle en passant, castling, and pawn promotion
+        # still need to handle en passant, and pawn promotion
         move = chess.Move.from_uci(self.uiBoard.active_square.name + dest_square.name)
         if move in self.gameBoard.legal_moves:
             if self.gameBoard.is_en_passant(move):
