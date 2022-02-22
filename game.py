@@ -75,9 +75,26 @@ class Game:
                         break
 
     def make_move(self, dest_square) -> bool:
+        # still need to handle en passant, castling, and pawn promotion
         move = chess.Move.from_uci(self.uiBoard.active_square.name + dest_square.name)
         if move in self.gameBoard.legal_moves:
-            self.uiBoard.move_from_to(self.uiBoard.active_square.name, dest_square.name)
+            if self.gameBoard.is_en_passant(move):
+                print("En passant capture!")
+                print(move)
+            elif self.gameBoard.is_castling(move):
+                print("Castling!")
+                if self.gameBoard.is_queenside_castling(move):
+                    self.uiBoard.queenside_castle(
+                        self.uiBoard.active_square.name, dest_square.name
+                    )
+                else:
+                    self.uiBoard.kingside_castle(
+                        self.uiBoard.active_square.name, dest_square.name
+                    )
+            else:
+                self.uiBoard.move_from_to(
+                    self.uiBoard.active_square.name, dest_square.name
+                )
             self.gameBoard.push(move)
             dest_square.reset_piece_pos()
             self.uiBoard.active_square = None

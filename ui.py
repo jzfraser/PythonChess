@@ -215,4 +215,40 @@ class Board:
         src_piece = self.squares[src_square_index].piece
         if src_piece is not None:
             self.squares[dest_square_index].piece = src_piece
+            self.squares[dest_square_index].piece.left = self.squares[
+                dest_square_index
+            ].left
+            self.squares[dest_square_index].piece.top = self.squares[
+                dest_square_index
+            ].top
             self.squares[src_square_index].piece = None
+
+    def kingside_castle(self, src, dest) -> None:
+        color = (
+            self.active_square.piece.symbol.isupper()
+        )  # true if white, false if black
+        rook_src = None
+        rook_dest = None
+        if color:
+            rook_src = self.squares[7].name
+            rook_dest = "f1"
+        else:
+            rook_src = self.squares[63].name
+            rook_dest = "f8"
+        self.move_from_to(src, dest)
+        self.move_from_to(rook_src, rook_dest)
+
+    def queenside_castle(self, src, dest) -> None:
+        color = (
+            self.active_square.piece.symbol.isupper()
+        )  # true if white, false if black
+        rook_src = None
+        rook_dest = None
+        if color:
+            rook_src = self.squares[0].name
+            rook_dest = "d1"
+        else:
+            rook_src = self.squares[56].name
+            rook_dest = "d8"
+        self.move_from_to(src, dest)
+        self.move_from_to(rook_src, rook_dest)
