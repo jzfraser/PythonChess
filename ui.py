@@ -252,3 +252,6 @@ class Board:
             rook_dest = "d8"
         self.move_from_to(src, dest)
         self.move_from_to(rook_src, rook_dest)
+
+    def en_passant(self, src, dest):
+        pass

@@ -27,7 +27,11 @@ class Game:
                         # if move is legal then make move and reset active square
                         if not self.make_move(square):
                             print("Move failed")
-                            self.uiBoard.active_square = None
+                            if square.piece is not None:
+                                self.drag_piece_on_square(square, event.pos)
+                            else:
+                                self.uiBoard.active_square = None
+                            self.odd_click = not self.odd_click
                             break
                 # else no active square
                 else:
@@ -72,6 +76,7 @@ class Game:
                     # else if move from active to current fails
                     elif not self.make_move(square):
                         print("Move failed")
+                        self.odd_click = not self.odd_click
                         break
 
     def make_move(self, dest_square) -> bool:
