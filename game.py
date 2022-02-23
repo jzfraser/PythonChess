@@ -26,7 +26,6 @@ class Game:
                     else:
                         # if move is legal then make move and reset active square
                         if not self.make_move(square):
-                            print("Move failed")
                             if square.piece is not None:
                                 self.drag_piece_on_square(square, event.pos)
                             else:
@@ -75,7 +74,6 @@ class Game:
                         break
                     # else if move from active to current fails
                     elif not self.make_move(square):
-                        print("Move failed")
                         self.odd_click = not self.odd_click
                         break
 
@@ -83,23 +81,16 @@ class Game:
         # still need to handle en passant, and pawn promotion
         move = chess.Move.from_uci(self.uiBoard.active_square.name + dest_square.name)
         if move in self.gameBoard.legal_moves:
+            src_square = self.uiBoard.active_square
             if self.gameBoard.is_en_passant(move):
-                print("En passant capture!")
-                print(move)
+                self.uiBoard.en_passant(src_square.name, dest_square.name)
             elif self.gameBoard.is_castling(move):
-                print("Castling!")
                 if self.gameBoard.is_queenside_castling(move):
-                    self.uiBoard.queenside_castle(
-                        self.uiBoard.active_square.name, dest_square.name
-                    )
+                    self.uiBoard.queenside_castle(src_square.name, dest_square.name)
                 else:
-                    self.uiBoard.kingside_castle(
-                        self.uiBoard.active_square.name, dest_square.name
-                    )
+                    self.uiBoard.kingside_castle(src_square.name, dest_square.name)
             else:
-                self.uiBoard.move_from_to(
-                    self.uiBoard.active_square.name, dest_square.name
-                )
+                self.uiBoard.move_from_to(src_square.name, dest_square.name)
             self.gameBoard.push(move)
             dest_square.reset_piece_pos()
             self.uiBoard.active_square = None
