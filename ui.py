@@ -63,6 +63,7 @@ class Square:
 class Piece:
     def __init__(self, symbol, left, top):
         self.symbol = symbol
+        self.color = self._color_from_symbol(symbol)
         self.dragging = False
         self.left = left
         self.top = top
@@ -71,6 +72,12 @@ class Piece:
 
     def __str__(self):
         return self.symbol
+
+    def _color_from_symbol(self, symbol):
+        if symbol.isupper():
+            return Color.WHITE
+        else:
+            return Color.BLACK
 
 
 class Board:
@@ -224,12 +231,9 @@ class Board:
             self.squares[src_square_index].piece = None
 
     def kingside_castle(self, src, dest) -> None:
-        color = (
-            self.active_square.piece.symbol.isupper()
-        )  # true if white, false if black
         rook_src = None
         rook_dest = None
-        if color:
+        if self.active_square.piece.color == Color.WHITE:
             rook_src = self.squares[7].name
             rook_dest = "f1"
         else:
@@ -239,12 +243,9 @@ class Board:
         self.move_from_to(rook_src, rook_dest)
 
     def queenside_castle(self, src, dest) -> None:
-        color = (
-            self.active_square.piece.symbol.isupper()
-        )  # true if white, false if black
         rook_src = None
         rook_dest = None
-        if color:
+        if self.active_square.piece.color == Color.WHITE:
             rook_src = self.squares[0].name
             rook_dest = "d1"
         else:
@@ -254,4 +255,11 @@ class Board:
         self.move_from_to(rook_src, rook_dest)
 
     def en_passant(self, src, dest):
-        pass
+        dest_index = self._parse_square_name(dest)
+        captured_index = None
+        if self.active_square.piece.color == Color.WHITE:
+            captured_index = dest_index - 8
+        else:
+            captured_index = dest_index + 8
+        self.move_from_to(src, dest)
+        self.squares[captured_index].piece = None

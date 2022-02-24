@@ -1,3 +1,6 @@
+from enum import Enum
+
+
 # constants
 FPS = 60
 
@@ -8,6 +11,12 @@ GREEN = [0, 150, 0]
 PURPLE = [170, 0, 170]
 
 COLOR_MAP = {0: "White", 1: "Black"}
+
+
+class Color(Enum):
+    WHITE = 0
+    BLACK = 1
+
 
 SQUARE_LENGTH = 80
 
