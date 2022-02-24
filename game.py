@@ -77,9 +77,22 @@ class Game:
                         self.odd_click = not self.odd_click
                         break
 
-    def make_move(self, dest_square) -> bool:
-        # still need to handle en passant, and pawn promotion
+    def make_move(self, dest_square: ui.Square) -> bool:
         move = chess.Move.from_uci(self.uiBoard.active_square.name + dest_square.name)
+        # still need to handle pawn promotion
+        # if dest square is rank 1 or 8
+        # if piece being moved is a pawn
+        # make move with default queen promotion
+        dest_rank = int(dest_square.name[1])
+        if dest_rank == 1 or dest_rank == 8:
+            piece_type = self.uiBoard.active_square.piece.symbol
+            uci = self.uiBoard.active_square.name + dest_square.name
+            if piece_type == "p":
+                move = chess.Move.from_uci(uci + "q")
+                self.uiBoard.promote_active("q")
+            elif piece_type == "P":
+                move = chess.Move.from_uci(uci + "q")
+                self.uiBoard.promote_active("Q")
         if move in self.gameBoard.legal_moves:
             src_square = self.uiBoard.active_square
             if self.gameBoard.is_en_passant(move):

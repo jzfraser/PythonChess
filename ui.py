@@ -263,3 +263,6 @@ class Board:
             captured_index = dest_index + 8
         self.move_from_to(src, dest)
         self.squares[captured_index].piece = None
+
+    def promote_active(self, new_symbol):
+        self.active_square.piece.symbol = new_symbol
